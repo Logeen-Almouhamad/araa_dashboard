@@ -1,90 +1,116 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import '../../../core/services/getx_services/link.dart';
 import '../../../model/project_model.dart';
+import '../../../model/proposal_model.dart';
 
+
+
+class ApiHelper {
+  static Future<Map<String, String>> getHeaders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString("token");
+
+    return {
+      "Accept": "application/json",
+      "Authorization": "Bearer $token",
+    };
+  }
+}
 class ProjectDetailsController extends GetxController {
   final ProjectModel project;
-  RxList<ProjectModel> relatedProjects = <ProjectModel>[].obs;
 
-  RxInt acceptedIndex = (-1).obs; // -1 تعني لا يوجد مشروع مقبول بعد
+
+  RxList<ProposalModel> proposals = <ProposalModel>[].obs;
+  RxInt acceptedIndex = (-1).obs;
+  RxBool isLoading = false.obs;
 
   ProjectDetailsController(this.project);
 
   @override
   void onInit() {
-    fetchRelatedProjects();
+    fetchProposals();
     super.onInit();
   }
 
-  void fetchRelatedProjects() async {
-    // مثال API
-    relatedProjects.value = [
-      ProjectModel(
-        id: 1,
-        title: 'مشروع 1',
-        imageUrl: 'asset/images/office1.png',
-        createdAt: DateTime.now().subtract(Duration(minutes: 10)),
-        publisherName: 'م. أحمد',
-        publisherImage: 'asset/images/user.png',
-      ),
-      ProjectModel(
-        id: 2,
-        title: 'مشروع 2',
-        imageUrl: 'asset/images/office2.png',
-        createdAt: DateTime.now().subtract(Duration(hours: 1)),
-        publisherName: 'م. لجين',
-        publisherImage: 'asset/images/user.png',
-      ),
-      ProjectModel(
-        id: 3,
-        title: 'مشروع 3',
-        imageUrl: 'asset/images/office3.png',
-        createdAt: DateTime.now().subtract(Duration(days: 1)),
-        publisherName: 'شركة الخلف',
-        publisherImage: 'asset/app_logo.png',
-      ),
-      ProjectModel(
-        id: 4,
-        title: 'مشروع 4',
-        imageUrl: 'asset/images/office1.png',
-        createdAt: DateTime.now().subtract(Duration(days: 1)),
-        publisherName: 'شركة الخلف',
-        publisherImage: 'asset/app_logo.png',
-      ),
-      ProjectModel(
-        id: 5,
-        title: 'مشروع54',
-        imageUrl: 'asset/images/office1.png',
-        createdAt: DateTime.now().subtract(Duration(days: 1)),
-        publisherName: 'م.يوسف',
-        publisherImage: 'asset/app_logo.png',
-      ),
-      ProjectModel(
-        id: 6,
-        title: 'مشروع 6',
-        imageUrl: 'asset/images/office1.png',
-        createdAt: DateTime.now().subtract(Duration(days: 1)),
-        publisherName: 'م.يوسف',
-        publisherImage: 'asset/app_logo.png',
-      ),
-      ProjectModel(
-        id: 7,
-        title: 'مشروع 7',
-        imageUrl: 'asset/images/office1.png',
-        createdAt: DateTime.now().subtract(Duration(days: 1)),
-        publisherName: 'م.يوسف',
-        publisherImage: 'asset/app_logo.png',
-      ),
-    ];
+  Future<void> fetchProposals() async {
+    try {
+      isLoading.value = true;
+
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("token");
+
+      final url = Uri.parse(
+        "https://papayawhip-goldfish-691767.hostingersite.com/dashboard/orders/${project.id}/proposals",
+      );
+      print("FINAL TOKEN >>> $token");
+      print("AUTH HEADER >>> Bearer $token");
+      final response = await http.get(
+        url,
+        headers: await ApiHelper.getHeaders(),
+      );
+      print("TOKEN IN PROPOSALS: $token");
+      print("URL: ${AppLink.getProposals(project.id)}");
+      print("PROPOSALS STATUS: ${response.statusCode}");
+      print("PROPOSALS BODY: ${response.body}");
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+
+        final List list = data["data"];
+
+        proposals.value =
+            list.map((e) => ProposalModel.fromJson(e)).toList();
+      } else {
+        Get.snackbar("Error", "Failed to load proposals");
+      }
+    } catch (e) {
+      print(e);
+      Get.snackbar("Error", "Something went wrong");
+    } finally {
+      isLoading.value = false;
+    }
   }
 
-  void acceptProject(int index) {
-    acceptedIndex.value = index; // ✅ فقط عدّل القيمة وليس المرجع
-    Get.snackbar(
-      "تم القبول",
-      "تم قبول المشروع بنجاح",
-      backgroundColor: Colors.green,
-      colorText: Colors.white,
-    );
+  /// ✅ قبول عرض
+  Future<void> acceptProject(int index) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString("token");
+
+      final proposal = proposals[index];
+
+      final url = Uri.parse(
+        "https://papayawhip-goldfish-691767.hostingersite.com/home/orders/${project.id}/proposals/${proposal.id}/accept",
+      );
+
+      final response = await http.post(
+        url,
+        headers: {
+          "Authorization": "Bearer $token", // ✅ مهم جداً
+          "Accept": "application/json",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        acceptedIndex.value = index;
+
+        Get.snackbar(
+          "تم القبول",
+          "تم قبول العرض بنجاح",
+          backgroundColor: Colors.green,
+          colorText: Colors.white,
+        );
+      } else {
+        Get.snackbar("خطأ", "فشل القبول");
+      }
+    } catch (e) {
+      print(e);
+      Get.snackbar("خطأ", "حدث خطأ");
+    }
   }
 }

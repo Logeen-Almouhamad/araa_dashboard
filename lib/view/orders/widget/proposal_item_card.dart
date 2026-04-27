@@ -2,24 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../core/constant/color.dart';
 import '../../../model/project_model.dart';
+import '../../../model/proposal_model.dart';
 import '../../../widget/gradient_button.dart';
 
 class ProjectItemCard extends StatelessWidget {
-  final ProjectModel project;
+  final ProposalModel proposal;
   final bool isAccepted;
   final bool isRejected;
   final VoidCallback onAccept;
 
   const ProjectItemCard({
     super.key,
-    required this.project,
     required this.isAccepted,
     required this.isRejected,
     required this.onAccept,
+    required this.proposal,
   });
 
   @override
   Widget build(BuildContext context) {
+    print("AVATAR URL: ${proposal.avatarUrl}");
     Color buttonColor;
 
     if (isAccepted) {
@@ -57,9 +59,9 @@ class ProjectItemCard extends StatelessWidget {
                     backgroundColor: AppColors.white,
                     child: CircleAvatar(
                       radius: 16.r,
-                      backgroundImage: project.publisherImage.startsWith("http")
-                          ? NetworkImage(project.publisherImage)
-                          : AssetImage(project.publisherImage) as ImageProvider,
+                      backgroundImage: proposal.avatarUrl.isNotEmpty
+                          ? NetworkImage(proposal.avatarUrl)
+                          : AssetImage("assets/images/avatar.png") as ImageProvider,
                     ),
                   ),
                   SizedBox(width: 8.w),
@@ -68,7 +70,7 @@ class ProjectItemCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          project.publisherName,
+                          proposal.name,
                           style: TextStyle(
                             fontSize: 15.sp,
                             fontWeight: FontWeight.bold,
@@ -76,7 +78,7 @@ class ProjectItemCard extends StatelessWidget {
                         ),
                         SizedBox(height: 2.h),
                         Text(
-                          _timeAgo(project.createdAt),
+                            _timeAgo(proposal.createdAt),
                           style: TextStyle(fontSize: 11.sp, color: Colors.grey),
                         ),
                       ],
@@ -89,10 +91,13 @@ class ProjectItemCard extends StatelessWidget {
             /// صورة المشروع
             ClipRRect(
               borderRadius: BorderRadius.circular(15.r),
-              child: Image.asset(
-                project.imageUrl,
+              child: Image.network(
+                proposal.imageUrl,
                 fit: BoxFit.cover,
                 width: double.infinity,
+                errorBuilder: (context, error, stackTrace) {
+                  return Image.asset("assets/images/placeholder.png");
+                },
               ),
             ),
             SizedBox(height: 8.h),

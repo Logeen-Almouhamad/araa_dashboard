@@ -10,7 +10,7 @@ import '../../../model/project_model.dart';
 import '../../../widget/gradient_button.dart';
 import '../../home/widget/custom_appbar.dart';
 import '../controller/project_details_controller.dart';
-import '../widget/project_item_card.dart';
+import '../widget/proposal_item_card.dart';
 
 class ProjectDetails extends StatelessWidget {
   final ProjectModel project;
@@ -94,10 +94,16 @@ class ProjectDetails extends StatelessWidget {
                 ),
                 SizedBox(height: 25.h),
                 /// 🔹 Grid المشاريع
-                GridView.builder(
+
+              Obx(() {
+                if (controller.isLoading.value) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                return GridView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: controller.relatedProjects.length,
+                  itemCount: controller.proposals.length,
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
                     crossAxisSpacing: 15.w,
@@ -105,7 +111,7 @@ class ProjectDetails extends StatelessWidget {
                     childAspectRatio: 1.0,
                   ),
                   itemBuilder: (context, index) {
-                    final item = controller.relatedProjects[index];
+                    final item = controller.proposals[index];
 
                     return Obx(() {
                       final isAccepted = controller.acceptedIndex.value == index;
@@ -113,14 +119,19 @@ class ProjectDetails extends StatelessWidget {
                           controller.acceptedIndex.value != index;
 
                       return ProjectItemCard(
-                        project: item,
-                        isAccepted: isAccepted,
+                        proposal: item,
+                        isAccepted: controller.acceptedIndex.value == index,
                         isRejected: isRejected,
-                        onAccept: () => controller.acceptProject(index),
+                        onAccept: () {
+                          print("🔥 تم الضغط على زر القبول");
+                          print("📌 index: $index");
+                          controller.acceptProject(index);
+                        },
                       );
                     });
                   },
-                ),
+                );
+                    }),
 
               ],
             ),
