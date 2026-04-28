@@ -1,5 +1,6 @@
 class ProjectModel {
   final int id;
+  final int orderId;
   final String title;
   final String imageUrl;
   final DateTime createdAt;
@@ -9,6 +10,7 @@ class ProjectModel {
 
   ProjectModel({
     required this.id,
+  required this.orderId,
     required this.title,
     required this.imageUrl,
     required this.createdAt,
@@ -19,6 +21,11 @@ class ProjectModel {
   factory ProjectModel.fromJson(Map<String, dynamic> json) {
     return ProjectModel(
       id: json['id'] ?? 0,
+
+      // ✅ أهم سطر (جيب order_id من API)
+      orderId: json['order_id'] ?? json['id'] ?? 0,
+
+
       title: json['title'] ?? '',
 
       // ✅ أهم تعديل (رابط الصورة)

@@ -8,6 +8,7 @@ class PostModel {
   final String style;
   final String planStatus;
   final DateTime createdAt;
+  final String? projectTimer;
 
   PostModel({
     required this.postId,
@@ -19,6 +20,7 @@ class PostModel {
     required this.style,
     required this.planStatus,
     required this.createdAt,
+    this.projectTimer,
   });
 
   factory PostModel.fromJson(Map<String, dynamic> json) {
@@ -32,6 +34,7 @@ class PostModel {
       style: json['style'],
       planStatus: json['plan_status'],
       createdAt: DateTime.parse(json['created_at']),
+      projectTimer: json['project_timer'],
     );
   }
 }

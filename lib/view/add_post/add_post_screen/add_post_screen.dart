@@ -81,8 +81,37 @@ class AddPostScreen extends StatelessWidget {
                   ),
                 ],
               ),
+              SizedBox(height: 25.h),
 
+              Text("مؤقت الصفقة"),
+              SizedBox(height: 10.h),
+
+              Row(
+                children: [
+                  Expanded(
+                    child: CustomPostField(
+                      hint: "الأيام",
+                      controller: controller.daysController,
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: CustomPostField(
+                      hint: "الساعات",
+                      controller: controller.hoursController,
+                    ),
+                  ),
+                  SizedBox(width: 10.w),
+                  Expanded(
+                    child: CustomPostField(
+                      hint: "الدقائق",
+                      controller: controller.minutesController,
+                    ),
+                  ),
+                ],
+              ),
               SizedBox(height: 30.h),
+
 
               /// رفع الصورة
               Text("رفع الصورة"),

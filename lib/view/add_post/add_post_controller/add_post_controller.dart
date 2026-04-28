@@ -18,6 +18,9 @@ class AddPostController extends GetxController {
   final areaController = TextEditingController();
   final styleController = TextEditingController();
   final planStatusController = TextEditingController();
+  final daysController = TextEditingController();
+  final hoursController = TextEditingController();
+  final minutesController = TextEditingController();
 
   RxList<String> imagePaths = <String>[].obs;
 
@@ -62,7 +65,8 @@ class AddPostController extends GetxController {
   /// نشر البوست مع الصور
   Future<void> submitPost() async {
     if (!validateFields()) return;
-
+    String projectTimer =
+        "${daysController.text} يوم و ${hoursController.text} ساعة و ${minutesController.text} دقيقة";
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
     final userId = prefs.getInt("user_id");
@@ -86,6 +90,7 @@ class AddPostController extends GetxController {
       request.fields['area'] = areaController.text;
       request.fields['style'] = styleController.text;
       request.fields['plan_status'] = planStatusController.text;
+      request.fields['project_timer'] = projectTimer;
 
       for (var path in imagePaths) {
         request.files.add(
@@ -121,6 +126,9 @@ class AddPostController extends GetxController {
           styleController.clear();
           planStatusController.clear();
           imagePaths.clear();
+          daysController.clear();
+          hoursController.clear();
+          minutesController.clear();
         } else {
           Get.snackbar(
             "فشل النشر",
@@ -161,6 +169,8 @@ class AddPostController extends GetxController {
     areaController.dispose();
     styleController.dispose();
     planStatusController.dispose();
+    daysController.dispose();
+    hoursController.dispose();
     super.onClose();
   }
 }

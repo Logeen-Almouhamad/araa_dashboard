@@ -28,6 +28,7 @@ class ProjectDetailsController extends GetxController {
   RxList<ProposalModel> proposals = <ProposalModel>[].obs;
   RxInt acceptedIndex = (-1).obs;
   RxBool isLoading = false.obs;
+  RxInt orderId = 0.obs;
 
   ProjectDetailsController(this.project);
 
@@ -45,26 +46,31 @@ class ProjectDetailsController extends GetxController {
       final token = prefs.getString("token");
 
       final url = Uri.parse(
-        "https://papayawhip-goldfish-691767.hostingersite.com/dashboard/orders/${project.id}/proposals",
+        "https://papayawhip-goldfish-691767.hostingersite.com/api/dashboard/orders/${project.id}/proposals",
       );
+
       print("FINAL TOKEN >>> $token");
-      print("AUTH HEADER >>> Bearer $token");
+
       final response = await http.get(
         url,
         headers: await ApiHelper.getHeaders(),
       );
-      print("TOKEN IN PROPOSALS: $token");
-      print("URL: ${AppLink.getProposals(project.id)}");
+
       print("PROPOSALS STATUS: ${response.statusCode}");
       print("PROPOSALS BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
 
+        // ✅ خذ order_id من هنا
+        orderId.value = data["order"]["order_id"];
+
         final List list = data["data"];
 
         proposals.value =
             list.map((e) => ProposalModel.fromJson(e)).toList();
+
+        print("ORDER ID >>> ${orderId.value}");
       } else {
         Get.snackbar("Error", "Failed to load proposals");
       }
@@ -85,16 +91,16 @@ class ProjectDetailsController extends GetxController {
       final proposal = proposals[index];
 
       final url = Uri.parse(
-        "https://papayawhip-goldfish-691767.hostingersite.com/home/orders/${project.id}/proposals/${proposal.id}/accept",
+        "https://papayawhip-goldfish-691767.hostingersite.com/home/orders/${orderId.value}/proposals/${proposal.id}/accept",
       );
 
       final response = await http.post(
         url,
-        headers: {
-          "Authorization": "Bearer $token", // ✅ مهم جداً
-          "Accept": "application/json",
-        },
+        headers: await ApiHelper.getHeaders(),
       );
+
+      print("STATUS CODE: ${response.statusCode}");
+      print("BODY: ${response.body}");
 
       if (response.statusCode == 200) {
         acceptedIndex.value = index;
