@@ -21,6 +21,7 @@ class AddPostController extends GetxController {
   final daysController = TextEditingController();
   final hoursController = TextEditingController();
   final minutesController = TextEditingController();
+  final budgetController = TextEditingController();
 
   RxList<String> imagePaths = <String>[].obs;
 
@@ -65,8 +66,12 @@ class AddPostController extends GetxController {
   /// نشر البوست مع الصور
   Future<void> submitPost() async {
     if (!validateFields()) return;
-    String projectTimer =
-        "${daysController.text} يوم و ${hoursController.text} ساعة و ${minutesController.text} دقيقة";
+    final now = DateTime.now();
+
+    final days = int.tryParse(daysController.text) ?? 0;
+    final hours = int.tryParse(hoursController.text) ?? 0;
+    final minutes = int.tryParse(minutesController.text) ?? 0;
+
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString("token");
     final userId = prefs.getInt("user_id");
@@ -80,7 +85,22 @@ class AddPostController extends GetxController {
       isLoading.value = true;
 
       var request = http.MultipartRequest('POST', Uri.parse(AppLink.posts));
+      final now = DateTime.now();
+      final days = int.tryParse(daysController.text) ?? 0;
+      final hours = int.tryParse(hoursController.text) ?? 0;
+      final minutes = int.tryParse(minutesController.text) ?? 0;
 
+      /// هذا هو مؤقت الصفقة (Deal Timer)
+      final dealDeadline = now.add(
+        Duration(
+          days: days,
+          hours: hours,
+          minutes: minutes,
+        ),
+      );
+
+      /// (اختياري) deadline المشروع (إذا عندك له input منفصل)
+      final projectDeadline = dealDeadline; // أو حقل آخر لو عندك
       request.headers['Authorization'] = 'Bearer $token';
 
       request.fields['user_id'] = userId.toString();
@@ -90,7 +110,14 @@ class AddPostController extends GetxController {
       request.fields['area'] = areaController.text;
       request.fields['style'] = styleController.text;
       request.fields['plan_status'] = planStatusController.text;
-      request.fields['project_timer'] = projectTimer;
+     // request.fields['project_timer'] = deadline.toIso8601String();
+      request.fields['budget'] = budgetController.text;
+
+      /// deadline الرئيسي
+      request.fields['deadline'] = projectDeadline.toIso8601String();
+
+      /// مؤقت الصفقة
+      request.fields['timer_ends_at'] = dealDeadline.toIso8601String();
 
       for (var path in imagePaths) {
         request.files.add(
@@ -129,6 +156,7 @@ class AddPostController extends GetxController {
           daysController.clear();
           hoursController.clear();
           minutesController.clear();
+          budgetController.clear();
         } else {
           Get.snackbar(
             "فشل النشر",
@@ -171,6 +199,7 @@ class AddPostController extends GetxController {
     planStatusController.dispose();
     daysController.dispose();
     hoursController.dispose();
+    budgetController.dispose();
     super.onClose();
   }
 }

@@ -83,6 +83,14 @@ class AddPostScreen extends StatelessWidget {
               ),
               SizedBox(height: 25.h),
 
+
+              Text("ميزانية المشروع (\$)"),
+              SizedBox(height: 8.h),
+              CustomPostField(
+                hint: "ادخل الميزانية",
+                controller: controller.budgetController,
+              ),
+
               Text("مؤقت الصفقة"),
               SizedBox(height: 10.h),
 
